@@ -1,0 +1,49 @@
+
+<script>
+function myFunction() {
+  // Declare variables
+  var input, filter, tables, table, tr, td, i, j, k, txtValue;
+  var oneVisibleInTable = false;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+
+  tables = document.getElementsByClassName("entries")
+
+  for (k = 0; k < tables.length; k++) {
+      oneVisibleInTable = false;
+      table = tables[k];
+      tr = table.getElementsByTagName("tr");
+
+      // Loop through all table rows, and hide those who don't match the search query
+      for (i = 1; i < tr.length; i++) {
+        var visible = false
+        for (j = 0; j < 3; j++) {
+            td = tr[i].getElementsByTagName("td")[j];
+            if (td) {
+              txtValue = td.textContent || td.innerText;
+              if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                visible = true
+              }
+            }
+        }
+
+        if (visible) {
+          tr[i].style.display = "";
+          oneVisibleInTable = true
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+
+      if (oneVisibleInTable) {
+        table.style.display = "";
+      } else {
+        table.style.display = "none";
+      }
+  }
+}
+</script>
+
+</body>
+</html>
+
