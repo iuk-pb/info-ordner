@@ -13,10 +13,20 @@ class Set:
         self.printed = printed
 
 
+class Overwrite:
+    def __init__(self, output_name, doc_id, action, printed, count):
+        self.output_name = output_name
+        self.doc_id = doc_id
+        self.action = action
+        self.count = count
+        self.printed = printed
+
+
 class InfoFile:
     def __init__(self, file, processors):
         self.valid = False
         self.usedOutputs = []
+        self.outputOverwrite = []
         self.cacheFiles = []
 
         # File with complete path
@@ -82,10 +92,8 @@ class InfoFile:
                     printed = True
 
                     if 'print' in curr_set:
-                        testprint = curr_set['print']
+                        printed = Utils.convert_yaml_bool(curr_set['print'])
 
-                        if testprint == 'n' or testprint == 'N':
-                            printed = False
                     if self.type == 'link':
                         # Links are always not printed
                         printed = False
@@ -124,18 +132,30 @@ class InfoFile:
             Utils.mkdir(subpath)
             shutil.copy(file, subpath)
 
-    def is_printed_in_sets(self, sets):
+    def is_printed_in_sets(self, output_name, sets):
+        for ow in self.outputOverwrite:
+            if ow.output_name == output_name:
+                return ow.printed
+
         for curr_set in self.sets:
             if curr_set.name in sets:
                 if curr_set.printed:
                     return True
         return False
 
-    def is_for_sets(self, sets):
+    def is_for_sets(self, output_name, sets):
+        for ow in self.outputOverwrite:
+            if ow.output_name == output_name:
+                return ow.action == '+'
+
         for curr_set in self.sets:
             if curr_set.name in sets:
                 return True
         return False
+
+    def add_output_overwrite(self, output_name, doc_id, action, printed, count):
+        ow = Overwrite(output_name, doc_id, action, printed, count)
+        self.outputOverwrite.append(ow)
 
     def add_used_output(self, output_name, printed):
         self.usedOutputs.append(Set(output_name, printed))

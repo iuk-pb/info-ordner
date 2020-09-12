@@ -94,13 +94,17 @@ class GeneratorHistory(Generator.Generator):
         if 'copyright' in self.parameters:
             self.copyright = self.parameters['copyright']
 
+        self.anzahl = 1
+        if 'anzahl' in self.parameters:
+            self.anzahl = self.parameters['anzahl']
+
         self.datum = time.strftime("%d.%m.%Y")
 
     def generate(self):
         self.read_last_entries()
 
         for entry in self.entries:
-            is_printed = entry.is_printed_in_sets(self.sets)
+            is_printed = entry.is_printed_in_sets(self.output_name, self.sets)
             self.add_current_state(entry, is_printed)
 
             last_entry = get_entry_by_docid(entry, self.last_entries)
@@ -256,6 +260,9 @@ class GeneratorHistory(Generator.Generator):
                 text += change.replace("->", "$\\rightarrow$") + " \\newline "
 
             text += " & "
+
+            if self.anzahl > 1:
+                text += "Hinweis: " + str(self.anzahl) + " Exemplare \\newline "
 
             for checklist in item.checklist:
                 text += "$\\square$ " + checklist + " \\newline "

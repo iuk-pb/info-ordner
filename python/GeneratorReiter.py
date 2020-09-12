@@ -18,6 +18,14 @@ class GeneratorPdfToc(Generator.Generator):
         if 'size' in self.parameters:
             self.size = self.parameters['size']
 
+        self.printEntries = True
+        if 'einzeln' in self.parameters:
+            self.printEntries = Utils.convert_yaml_bool(self.parameters['einzeln'])
+
+        self.printFolder = True
+        if 'ordner' in self.parameters:
+            self.printFolder = Utils.convert_yaml_bool(self.parameters['ordner'])
+
     def generate(self):
         self.reiter_create_with_size(self.entries, self.folder_output, self.size)
 
@@ -30,31 +38,57 @@ class GeneratorPdfToc(Generator.Generator):
             counter = 0
             add_new_page = False
             endtikz = False
+            last_folder = ""
 
             for entry in entries:
                 if not entry.type == 'link':
-                    if counter % 2 == 0:
-                        if add_new_page:
-                            self.reiter_add_break(file)
-                            add_new_page = False
-                        self.reiter_add_page(file)
-                        if size == 'A3':
-                            self.reiter_add_a3(file)
-                            self.reiter_a3_field_left(file, entry.docId, entry.docTitle)
-                        else:
-                            self.reiter_add_a4(file)
-                            self.reiter_a4_field_left(file, entry.docId, entry.docTitle)
-                        endtikz = False
-                    else:
-                        if size == 'A3':
-                            self.reiter_a3_field_right(file, entry.docId, entry.docTitle)
-                        else:
-                            self.reiter_a4_field_right(file, entry.docId, entry.docTitle)
-                        self.reiter_end_tikz(file)
-                        endtikz = True
-                        add_new_page = True
+                    if self.printFolder:
+                        if entry.folder != last_folder:
+                            if counter % 2 == 0:
+                                if add_new_page:
+                                    self.reiter_add_break(file)
+                                    add_new_page = False
+                                self.reiter_add_page(file)
+                                if size == 'A3':
+                                    self.reiter_add_a3(file)
+                                    self.reiter_a3_field_left(file, entry.folder, "")
+                                else:
+                                    self.reiter_add_a4(file)
+                                    self.reiter_a4_field_left(file, entry.folder, "")
+                                endtikz = False
+                            else:
+                                if size == 'A3':
+                                    self.reiter_a3_field_right(file, entry.folder, "")
+                                else:
+                                    self.reiter_a4_field_right(file, entry.folder, "")
+                                self.reiter_end_tikz(file)
+                                endtikz = True
+                                add_new_page = True
+                            counter += 1
+                            last_folder = entry.folder
 
-                    counter += 1
+                    if self.printEntries:
+                        if counter % 2 == 0:
+                            if add_new_page:
+                                self.reiter_add_break(file)
+                                add_new_page = False
+                            self.reiter_add_page(file)
+                            if size == 'A3':
+                                self.reiter_add_a3(file)
+                                self.reiter_a3_field_left(file, entry.docId, entry.docTitle)
+                            else:
+                                self.reiter_add_a4(file)
+                                self.reiter_a4_field_left(file, entry.docId, entry.docTitle)
+                            endtikz = False
+                        else:
+                            if size == 'A3':
+                                self.reiter_a3_field_right(file, entry.docId, entry.docTitle)
+                            else:
+                                self.reiter_a4_field_right(file, entry.docId, entry.docTitle)
+                            self.reiter_end_tikz(file)
+                            endtikz = True
+                            add_new_page = True
+                        counter += 1
 
             if not endtikz:
                 self.reiter_end_tikz(file)
@@ -99,20 +133,28 @@ class GeneratorPdfToc(Generator.Generator):
         file.write('\\newpage\n')
 
     def reiter_a3_field_left(self, file, doc_id, description):
-        self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-28.9', '-7.425', description)
-        self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-30.2', '-7.425', doc_id)
+        if len(description) > 0:
+            self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-28.9', '-7.425', description)
+        if len(doc_id) > 0:
+            self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-30.2', '-7.425', doc_id)
 
     def reiter_a3_field_right(self, file, doc_id, description):
-        self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-28.9', '7.425', description)
-        self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-30.2', '7.425', doc_id)
+        if len(description) > 0:
+            self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-28.9', '7.425', description)
+        if len(doc_id) > 0:
+            self.reiter_add_text_field(file, '1.3', '14.85', '1.0', '13.5', '-30.2', '7.425', doc_id)
 
     def reiter_a4_field_left(self, file, doc_id, description):
-        self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-19.9', '-5.25', description)
-        self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-21.2', '-5.25', doc_id)
+        if len(description) > 0:
+            self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-19.9', '-5.25', description)
+        if len(doc_id) > 0:
+            self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-21.2', '-5.25', doc_id)
 
     def reiter_a4_field_right(self, file, doc_id, description):
-        self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-19.9', '5.25', description)
-        self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-21.2', '5.25', doc_id)
+        if len(description) > 0:
+            self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-19.9', '5.25', description)
+        if len(doc_id) > 0:
+            self.reiter_add_text_field(file, '1.3', '10.5', '1.0', '9', '-21.2', '5.25', doc_id)
 
     def reiter_add_a3(self, file):
         file.write(
@@ -160,5 +202,5 @@ class GeneratorPdfToc(Generator.Generator):
         file.write('at ([yshift=' + yshift + 'cm,xshift=' + xshift + 'cm]current page.north) {\n')
         file.write('\\centering\n')
         file.write('\\fontsize{32}{32} \\selectfont\n')
-        file.write('\\resizebox{' + inner_width + 'cm}{' + inner_height + 'cm}{\\textbf{' + text + '}}\n')
+        file.write('\\resizebox{' + inner_width + 'cm}{' + inner_height + 'cm}{\\textbf{' + Utils.latex_escape(text) + '}}\n')
         file.write('};\n')

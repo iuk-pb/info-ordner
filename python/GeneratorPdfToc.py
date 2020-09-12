@@ -89,7 +89,7 @@ class GeneratorPdfToc(Generator.Generator):
                     last_category = entry.folder
                     count_in_category = 0
 
-                not_printed = not entry.is_printed_in_sets(self.sets)
+                not_printed = not entry.is_printed_in_sets(self.output_name, self.sets)
                 self.toc_generate_entry(y, entry.docTitle, entry.docSubTitle, entry.datum, entry.version, entry.docId,
                                         count_in_category, not_printed)
                 y += TOC_ENTRY_HEIGHT_DOUBLE_LINE
@@ -135,7 +135,7 @@ class GeneratorPdfToc(Generator.Generator):
         self.latexFile.write('\\begin{textblock*}{19cm}(1cm,28.5cm)\n')
         self.latexFile.write('\\raggedleft\n')
         self.latexFile.write(
-            '\\colorbox{gray!30}{Inhaltsverzeichnis - Datum ' + self.datum +
+            '\\colorbox{gray!30}{' + Utils.latex_escape(self.docTitle) + ' - Datum ' + self.datum +
             ' - Seite \\thepage/\\pageref{LastPage}  - ' + self.docId + '}\n')
         self.latexFile.write('\\end{textblock*}\n')
         self.latexFile.write('\\begin{tikzpicture}[remember picture,overlay, anchor = north west]\n')

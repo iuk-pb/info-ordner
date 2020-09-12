@@ -49,7 +49,7 @@ generators = {
 # Set logging settings #################################################################################################
 
 logger = logging.getLogger(__name__)
-coloredlogs.install(level='DEBUG')
+coloredlogs.install(level='INFO')
 
 # Parse command line arguments #########################################################################################
 
@@ -70,7 +70,22 @@ folderOutput = os.path.abspath(args.output)
 logger.info("Cache Verzeichnis: " + folderCache)
 logger.info("Arbeitsverzeichnis: " + folderWork)
 
+# Help functinos #######################################################################################################
+
+
+def add_overwrite(sets, name, doc_id, action, printed, count):
+    found = False
+    for set in sets:
+        if set.docId == doc_id:
+            set.add_output_overwrite(name, doc_id, action, printed, count)
+            found = True
+            break
+
+    if not found:
+        logger.error("Kann original für overwrite" + doc_id + " in output " + name + " nicht finden")
+
 # Variables ############################################################################################################
+
 
 availableSetsAndOutputs = []
 
@@ -90,6 +105,9 @@ for rawFolder in args.ordner:
         for filename in fnmatch.filter(filenames, '*.yaml'):
             if os.path.join(root, filename) == configFile:
                 # Ignore main configuration file
+                continue
+            if filename.startswith("Historie_"):
+                # Ignore history files
                 continue
 
             logger.debug("Füge hinzu: " + filename)
@@ -149,18 +167,40 @@ for output in configData['outputs']:
     sets = output['sets']
     included_generators = output['generators']
 
+    if 'entries' in output:
+        for entry in output['entries']:
+            if "docId" not in entry:
+                logger.error("Keine docId in output")
+                continue
+
+            doc_id = entry["docId"]
+            action = '+'
+            printed = True
+            count = 1
+
+            if "action" in entry:
+                action = entry["action"]
+
+            if "print" in entry:
+                printed = Utils.convert_yaml_bool(entry["print"])
+
+            if "anzahl" in entry:
+                count = entry["anzahl"]
+
+            add_overwrite(sortedInfoFiles, name, doc_id, action, printed, count)
+
     customOutputPath = folderOutput + "/" + name
     Utils.mkdir(customOutputPath)
 
     logger.info("Erstelle Ausgabe für " + name)
 
-    filteredEntries = [d for d in sortedInfoFiles if d.is_for_sets(sets)]
+    filteredEntries = [d for d in sortedInfoFiles if d.is_for_sets(name, sets)]
 
     logger.info("Kopiere Dateien aus Cache")
     for entry in filteredEntries:
         entry.copy_cache(customOutputPath)
 
-        entry.add_used_output(name, entry.is_printed_in_sets(sets))
+        entry.add_used_output(name, entry.is_printed_in_sets(name, sets))
 
     if included_generators:
         logger.info("Starte Generatoren")

@@ -57,5 +57,16 @@ def latex_escape(text):
     }
     regex = re.compile('|'.join(re.escape(str(key)) for key in sorted(conv.keys(), key=lambda item: - len(item))))
     out = regex.sub(lambda match: conv[match.group()], text)
-    print('in "' + text + '" -> "' + out + '"')
+    # print('in "' + text + '" -> "' + out + '"')
     return out
+
+
+def convert_yaml_bool(inputtext):
+    input_lower = inputtext.lower()
+    if input_lower == 'n' or input_lower == 'no' or input_lower == 'nein':
+        return False
+    if input_lower == 'y' or input_lower == 'yes' or input_lower == 'j' or input_lower == 'ja':
+        return True
+
+    logger.debug("Falscher boolean Wert: " + inputtext + " , nutze False")
+    return False
