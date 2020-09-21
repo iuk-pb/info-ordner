@@ -23,10 +23,10 @@ class GeneratorRedist(Generator.Generator):
                     file.write("datum: \"" + entry.datum + "\"\r\n")
                 file.write("sets:\r\n")
 
-                print(entry.to_string())
-                print('####')
-                print(self.sets)
-                print('----------')
+                # print(entry.to_string())
+                # print('####')
+                # print(self.sets)
+                # print('----------')
 
                 for curr_set in entry.sets:
                     if curr_set.name in self.sets:

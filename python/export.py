@@ -24,7 +24,8 @@ import GeneratorReiter
 import GeneratorRedist
 import GeneratorHistory
 
-# TODO kontakte
+import Contacts
+
 # TODO Process SLA_Series
 # TODO Generator Debian package
 
@@ -88,6 +89,7 @@ def add_overwrite(sets, name, doc_id, action, printed, count):
 
 
 availableSetsAndOutputs = []
+contacts = Contacts.Contacts()
 
 # Read configuration file ##############################################################################################
 
@@ -134,6 +136,19 @@ logger.info("Sortiere Dateien")
 
 sortedInfoFiles = sorted(infoFiles, key=lambda sort_entry: (sort_entry.folder, sort_entry.docId))
 
+# Read all contacts ####################################################################################################
+
+logger.info("Lese Kontakte ein")
+
+files = []
+for rawFolder in args.ordner:
+    logger.debug("Durchsuche: " + rawFolder)
+    for root, dirnames, filenames in os.walk(rawFolder):
+        for filename in fnmatch.filter(filenames, '*.vcf'):
+            filepath = os.path.join(root, filename)
+            logger.debug("Lese Kontakte von Datei: " + filepath)
+            contacts.read_file(filepath)
+
 # Create caches ########################################################################################################
 
 if args.cleancache:
@@ -149,7 +164,7 @@ logger.info("Erstelle Cache")
 
 for i in sortedInfoFiles:
     processor = processors[i.type](i)
-    processor.create_cache(folderCache, folderWork)
+    processor.create_cache(folderCache, folderWork, contacts)
 
     i.set_cache_files(processor.cache_files())
 

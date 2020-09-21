@@ -9,6 +9,6 @@ class ProcessLink(Process.Process):
     def __init__(self, info_file):
         Process.Process.__init__(self, info_file)
 
-    def create_cache(self, folder_cache, folder_work):
+    def create_cache(self, folder_cache, folder_work, contacts):
         # Nothing to be done
         return

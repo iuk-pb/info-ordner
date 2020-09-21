@@ -12,7 +12,7 @@ class ProcessSla(Process.Process):
     def __init__(self, info_file):
         Process.Process.__init__(self, info_file)
 
-    def create_cache(self, folder_cache, folder_work):
+    def create_cache(self, folder_cache, folder_work, contacts):
         self.folderCache = folder_cache
         self.folderWork = folder_work
 
@@ -41,15 +41,10 @@ class ProcessSla(Process.Process):
         data = data.replace("%VERSION%", self.infoFile.version)
 
         # TODO implement additional data replacement
-        # for key in jsonData:
-        #  if isinstance(jsonData[key], types.StringTypes):
-        #    data = data.replace("%" + key + "%", jsonData[key])
-
         # for key in additionalVariables:
         #  data = data.replace("%" + key + "%", additionalVariables[key])
 
-        # for key in g_kontakte:
-        #  data = data.replace("%" + key + "%", g_kontakte[key])
+        data = contacts.replace_data(data, "%", "%")
 
         with open(tmp_sla, 'w') as file:
             file.write(data)

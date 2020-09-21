@@ -9,7 +9,7 @@ class ProcessDocx(ProcessPdf.ProcessPdf):
     def __init__(self, info_file):
         ProcessPdf.ProcessPdf.__init__(self, info_file)
 
-    def create_cache(self, folder_cache, folder_work):
+    def create_cache(self, folder_cache, folder_work, contacts):
         self.folderCache = folder_cache
         self.folderWork = folder_work
 
