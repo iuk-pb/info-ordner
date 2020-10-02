@@ -28,12 +28,16 @@ class InfoFile:
         self.usedOutputs = []
         self.outputOverwrite = []
         self.cacheFiles = []
+        self.redist_raw = False
 
         # File with complete path
         self.file = file
 
         # Filename without extension and without path
         self.baseFile = os.path.basename(file).replace(".yaml", "")
+
+        if '_' not in self.baseFile:
+            logger.error(self.file + " hat keinen gültigen Dateinaen")
 
         # Doc ID e.g. MST.A.02
         self.docId = self.baseFile.split('_')[0]
@@ -46,11 +50,16 @@ class InfoFile:
 
         with open(file) as yaml_file:
             yaml_data = yaml.load(yaml_file)
+            self.raw_yaml = yaml_data
 
             if 'type' not in yaml_data:
                 logger.error(self.file + " 'type' ist nicht gesetzt. Datei wird nicht verarbeitet")
                 return
             self.type = yaml_data['type']
+
+            if self.type == 'link':
+                # Always use a raw redistribute for links
+                self.redist_raw = True
 
             if self.type not in processors:
                 logger.error(
@@ -86,23 +95,37 @@ class InfoFile:
             self.sets = []
             if 'sets' in yaml_data and yaml_data['sets']:
                 for curr_set in yaml_data['sets']:
-                    setname = curr_set['name']
-                    if not setname:
-                        logger.error(self.file + " 'set name' ist nicht gültig")
-                    printed = True
-
-                    if 'print' in curr_set:
-                        printed = Utils.convert_yaml_bool(curr_set['print'])
-
-                    if self.type == 'link':
-                        # Links are always not printed
-                        printed = False
-
-                    self.sets.append(Set(setname, printed))
+                    self.sets.append(InfoFile.read_set_from_yaml(self, curr_set))
             else:
                 logger.error(self.file + " 'sets' sind nicht gültig")
 
+            self.variables = {}
+            if 'variables' in yaml_data:
+                for var in yaml_data['variables']:
+                    name = var['name']
+                    value = var['value']
+                    self.variables[name] = value
+
+            if 'redist_raw' in yaml_data:
+                self.redist_raw = Utils.convert_yaml_bool(yaml_data['redist_raw'])
+
         self.valid = True
+
+    @staticmethod
+    def read_set_from_yaml(infoFile, set):
+        setname = set['name']
+        if not setname:
+            logger.error(infoFile.file + " 'set name' ist nicht gültig")
+        printed = True
+
+        if 'print' in set:
+            printed = Utils.convert_yaml_bool(set['print'])
+
+        if infoFile.type == 'link':
+            # Links are always not printed
+            printed = False
+
+        return Set(setname, printed)
 
     def to_string(self):
         ret = "######################################\r\n"
@@ -116,7 +139,7 @@ class InfoFile:
         ret += "Datum: " + self.datum + "\r\n"
         ret += "Copyright: " + self.copyright + "\r\n"
         if len(self.cacheFiles) > 0:
-            ret += "Cache files: " + str(self.cacheFiles) + "\r\n"
+             ret += "Cache files: " + str(self.cacheFiles) + "\r\n"
         if len(self.sets) > 0:
             for curr_set in self.sets:
                 ret += "Set: " + curr_set.name + " (Print: " + str(curr_set.printed) + ")\r\n"
@@ -126,7 +149,14 @@ class InfoFile:
     def set_cache_files(self, cache_files):
         self.cacheFiles = cache_files
 
-    def copy_cache(self, output_folder):
+    def get_cache_files_for_sets(self, sets):
+        ret = []
+        for file in self.cacheFiles:
+            if file not in ret:
+                ret.append(file)
+        return ret
+
+    def copy_cache(self, output_folder, sets):
         for file in self.cacheFiles:
             subpath = output_folder + "/" + self.folder
             Utils.mkdir(subpath)

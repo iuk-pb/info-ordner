@@ -1,4 +1,5 @@
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class Contact:
         self.id = vcard.nickname.value
         self.vcard = vcard
         self.replace_items = []
-        # vcard.prettyPrint()
+        #vcard.prettyPrint()
 
         if hasattr(self.vcard, 'title'):
             self.create("TITLE", self.vcard.title.value)
@@ -33,6 +34,13 @@ class Contact:
 
         if hasattr(self.vcard, 'email_list'):
             self.create_list("EMAIL", self.vcard.email_list, False)
+
+        self.categories = []
+        if hasattr(self.vcard, 'categories'):
+            self.categories = self.vcard.categories.value
+
+        if hasattr(self.vcard, 'x_sip_list'):
+            self.create_list("SIP", self.vcard.x_sip_list, False)
 
         for item in self.replace_items:
             logger.warning("Replace variables " + item.name + ": " + item.value)
@@ -101,3 +109,18 @@ class Contact:
             tmpdata = tmpdata.replace(name, item.value)
 
         return tmpdata
+
+    def is_for_sets(self, name, sets):
+        for curr_set in self.categories:
+            if curr_set in sets:
+                return True
+        return False
+
+    def serialize(self, sets):
+        tmp = copy.deepcopy(self.vcard)
+        new_cats = []
+        for cat in self.categories:
+            if cat in sets:
+                new_cats.append(cat)
+        tmp.categories.value = new_cats
+        return tmp.serialize()

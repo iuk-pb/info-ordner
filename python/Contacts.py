@@ -15,3 +15,9 @@ class Contacts:
         for item in self.items:
             tmpdata = item.replace_data(tmpdata, prefix, postfix)
         return tmpdata
+
+    def write_file(self, path, sets):
+        with open(path, 'w') as file:
+            for contact in self.items:
+                file.write(contact.serialize(sets))
+                file.write('\n')

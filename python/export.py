@@ -16,7 +16,6 @@ import ProcessPdf
 import ProcessXslx
 import ProcessDocx
 import ProcessSla
-import ProcessSlaSerie
 
 import GeneratorPdfToc
 import GeneratorHtmlToc
@@ -26,9 +25,6 @@ import GeneratorHistory
 
 import Contacts
 
-# TODO Process SLA_Series
-# TODO Generator Debian package
-
 processors = {
     'copy': ProcessCopy.create_instance,
     'link': ProcessLink.create_instance,
@@ -36,7 +32,6 @@ processors = {
     'xslx': ProcessXslx.create_instance,
     'docx': ProcessDocx.create_instance,
     'sla': ProcessSla.create_instance,
-    'sla_serie': ProcessSlaSerie.create_instance,
 }
 
 generators = {
@@ -50,7 +45,7 @@ generators = {
 # Set logging settings #################################################################################################
 
 logger = logging.getLogger(__name__)
-coloredlogs.install(level='INFO')
+coloredlogs.install(level='DEBUG')
 
 # Parse command line arguments #########################################################################################
 
@@ -90,21 +85,32 @@ def add_overwrite(sets, name, doc_id, action, printed, count):
 
 availableSetsAndOutputs = []
 contacts = Contacts.Contacts()
+globalVariables = {}
 
 # Read configuration file ##############################################################################################
 
 with open(configFile) as config_yaml_file:
     configData = yaml.load(config_yaml_file)
 
+if 'variables' in configData:
+    for var in configData['variables']:
+        name = var['name']
+        value = var['value']
+        globalVariables[name] = value
+
 # Search all files #####################################################################################################
 
 logger.info("Suche Dateien zum Verarbeiten")
 
 files = []
-for rawFolder in args.ordner:
+inputFolder = args.ordner
+for rawFolder in inputFolder:
     logger.debug("Durchsuche: " + rawFolder)
     for root, dirnames, filenames in os.walk(rawFolder):
         for filename in fnmatch.filter(filenames, '*.yaml'):
+            if filename.endswith('export.yaml'):
+                # Ignore export.xaml files
+                continue
             if os.path.join(root, filename) == configFile:
                 # Ignore main configuration file
                 continue
@@ -141,7 +147,7 @@ sortedInfoFiles = sorted(infoFiles, key=lambda sort_entry: (sort_entry.folder, s
 logger.info("Lese Kontakte ein")
 
 files = []
-for rawFolder in args.ordner:
+for rawFolder in inputFolder:
     logger.debug("Durchsuche: " + rawFolder)
     for root, dirnames, filenames in os.walk(rawFolder):
         for filename in fnmatch.filter(filenames, '*.vcf'):
@@ -151,9 +157,9 @@ for rawFolder in args.ordner:
 
 # Create caches ########################################################################################################
 
+Utils.mkdir(folderCache)
 if args.cleancache:
     logger.info("Bereinige cache")
-    Utils.mkdir(folderCache)
     Utils.rm(folderCache + "/*")
 
 logger.info("Bereinige work")
@@ -164,7 +170,7 @@ logger.info("Erstelle Cache")
 
 for i in sortedInfoFiles:
     processor = processors[i.type](i)
-    processor.create_cache(folderCache, folderWork, contacts)
+    processor.create_cache(folderCache, folderWork, contacts, globalVariables, inputFolder)
 
     i.set_cache_files(processor.cache_files())
 
@@ -213,9 +219,13 @@ for output in configData['outputs']:
 
     logger.info("Kopiere Dateien aus Cache")
     for entry in filteredEntries:
-        entry.copy_cache(customOutputPath)
-
+        entry.copy_cache(customOutputPath, sets)
         entry.add_used_output(name, entry.is_printed_in_sets(name, sets))
+
+    logger.info("Filtere Kontakte")
+
+    filteredContacts = Contacts.Contacts()
+    filteredContacts.items = [d for d in contacts.items if d.is_for_sets(name, sets)]
 
     if included_generators:
         logger.info("Starte Generatoren")
@@ -225,7 +235,8 @@ for output in configData['outputs']:
             if 'parameters' in generator:
                 gen_params = generator['parameters']
 
-            gen = generators[gen_name](name, gen_params, filteredEntries, sets, folderWork, customOutputPath, args.ordner)
+            gen = generators[gen_name](name, gen_params, filteredEntries, sets, folderWork, customOutputPath,
+                                       args.ordner, filteredContacts, globalVariables)
             gen.generate()
 
 # Write overview CSV ###################################################################################################

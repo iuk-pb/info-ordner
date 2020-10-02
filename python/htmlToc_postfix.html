@@ -44,6 +44,22 @@ function myFunction() {
 }
 </script>
 
+<script>
+// Check that service workers are supported
+if ('serviceWorker' in navigator) {
+  // Use the window load event to keep the page load performant
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
+</script>
+
+<script>
+function UpdateApp() {
+  window.alert("Zum Aktualisieren laden sie diese Seite mit ihrem Browser erneut, beenden sie danach alle Fenster und öffnen Sie diese Seite erneut. Nun sollte die Seite aktualisiert sein");
+}
+</script>
+
 </body>
 </html>
 

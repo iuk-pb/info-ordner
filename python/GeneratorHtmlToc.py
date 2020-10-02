@@ -1,15 +1,16 @@
 import os.path
 import time
 import Generator
+import os
+import shutil
 
-
-def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
-    return GeneratorPdfToc(output_name, parameters, entries, sets, folder_work, folder_output, input_folders)
+def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
+    return GeneratorPdfToc(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables)
 
 
 class GeneratorPdfToc(Generator.Generator):
-    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
-        Generator.Generator.__init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders)
+    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
+        Generator.Generator.__init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables)
 
         self.docId = ""
         if 'docId' in self.parameters:
@@ -25,10 +26,30 @@ class GeneratorPdfToc(Generator.Generator):
 
         self.datum = time.strftime("%d.%m.%Y")
 
+    def copytree(self, src, dst, symlinks=False, ignore=None):
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            if os.path.isdir(s):
+                shutil.copytree(s, d, symlinks, ignore)
+            else:
+                shutil.copy2(s, d)
+
+    def write_header(self, file):
+        file.write("<div id=\"header\">\n")
+        file.write("<span id=\"header_text\">Info-Ordner für " + self.output_name + "</span><br/>\n")
+        file.write("<span id=\"header_stand\">Stand: " + self.datum + "</span>\n")
+        file.write("<a href=\"javascript:UpdateApp();\">(Aktualisieren)</a>\n")
+        file.write("</div>\n")
+        file.write("<div id=\"search\"><input  type=\"text\" id=\"myInput\" onkeyup=\"myFunction()\" placeholder=\"Suche ...\" title=\"Zur Suche tippen\"></div>\n\n")
+
     def generate(self):
+        self.copytree(os.path.dirname(os.path.abspath(__file__)) + "/htmlToc_Files", self.folder_output)
         with open(self.folder_output + "/index.html", 'w') as file:
             with open(os.path.dirname(os.path.abspath(__file__)) + "/htmlToc_prefix.html", 'r') as prefix:
                 file.write(prefix.read())
+
+            self.write_header(file)
 
             is_first = True
             last_category = ""
@@ -45,8 +66,9 @@ class GeneratorPdfToc(Generator.Generator):
                 if entry.type == 'link':
                     link = entry.link
                 else:
-                    if len(entry.cacheFiles) > 0:
-                        link = entry.folder + "/" + os.path.basename(entry.cacheFiles[0])
+                    cacheFilesForSets = entry.get_cache_files_for_sets(self.sets)
+                    if len(cacheFilesForSets) > 0:
+                        link = entry.folder + "/" + os.path.basename(cacheFilesForSets[0])
 
                 self.toc_generate_entry_html(file, entry.docTitle, entry.docSubTitle, entry.datum, entry.version,
                                              entry.docId, link)

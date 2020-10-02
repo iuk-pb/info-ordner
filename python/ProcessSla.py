@@ -12,7 +12,7 @@ class ProcessSla(Process.Process):
     def __init__(self, info_file):
         Process.Process.__init__(self, info_file)
 
-    def create_cache(self, folder_cache, folder_work, contacts):
+    def create_cache(self, folder_cache, folder_work, contacts, variables, input_folders):
         self.folderCache = folder_cache
         self.folderWork = folder_work
 
@@ -25,7 +25,16 @@ class ProcessSla(Process.Process):
 
         tmp_sla = self.folderWork + "/" + self.infoFile.baseFile + ".sla"
         raw_sla = self.infoFile.file.replace(".yaml", ".sla")
-        raw_without_extension = self.infoFile.file.replace(".yaml", ".*")
+        if 'sla' in self.infoFile.raw_yaml:
+            raw_sla = os.path.dirname(self.infoFile.file) + "/" + self.infoFile.raw_yaml['sla']
+            if not os.path.exists(raw_sla):
+                # Not direct path, check each input folder
+                for inputFolder in input_folders:
+                    raw_sla = inputFolder + "/" + self.infoFile.raw_yaml['sla']
+                    if os.path.exists(raw_sla):
+                        break
+
+        raw_without_extension = raw_sla.replace(".sla", ".*")
         additional_files = glob.glob(raw_without_extension)
         for file in additional_files:
             Utils.syscall("cp '" + file + "' '" + self.folderWork + "/'")
@@ -40,9 +49,11 @@ class ProcessSla(Process.Process):
         data = data.replace("%DATUM%", self.infoFile.datum)
         data = data.replace("%VERSION%", self.infoFile.version)
 
-        # TODO implement additional data replacement
-        # for key in additionalVariables:
-        #  data = data.replace("%" + key + "%", additionalVariables[key])
+        for key in self.infoFile.variables:
+            data = data.replace("%" + key + "%", self.infoFile.variables[key])
+
+        for key in variables:
+            data = data.replace("%" + key + "%", variables[key])
 
         data = contacts.replace_data(data, "%", "%")
 

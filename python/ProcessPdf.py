@@ -21,7 +21,7 @@ class ProcessPdf(Process.Process):
         Utils.rm(self.folderWork + "/page*.pdf")
         Utils.rm(self.folderWork + "/page*.latex")
 
-    def create_cache(self, folder_cache, folder_work, contacts):
+    def create_cache(self, folder_cache, folder_work, contacts, variables, input_folders):
         self.folderCache = folder_cache
         self.folderWork = folder_work
 

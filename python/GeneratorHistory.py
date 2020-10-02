@@ -28,8 +28,8 @@ CHECKLIST_CHANGE_VERSIONDATUM = ['Drucke Dokument', 'Entferne altes Dokument', '
 logger = logging.getLogger(__name__)
 
 
-def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
-    return GeneratorHistory(output_name, parameters, entries, sets, folder_work, folder_output, input_folders)
+def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
+    return GeneratorHistory(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables)
 
 
 def get_entry_by_docid(entry, entries):
@@ -72,9 +72,9 @@ class HistoryItem:
 
 
 class GeneratorHistory(Generator.Generator):
-    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
+    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
         Generator.Generator.__init__(self, output_name, parameters, entries, sets, folder_work, folder_output,
-                                     input_folders)
+                                     input_folders, contacts, variables)
         self.current_state = {}
         self.current_state['entries'] = []
         self.last_entries = []

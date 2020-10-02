@@ -5,14 +5,14 @@ import Generator
 import Utils
 
 
-def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
-    return GeneratorPdfToc(output_name, parameters, entries, sets, folder_work, folder_output, input_folders)
+def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
+    return GeneratorPdfToc(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables)
 
 
 class GeneratorPdfToc(Generator.Generator):
-    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
+    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
         Generator.Generator.__init__(self, output_name, parameters, entries, sets, folder_work, folder_output,
-                                     input_folders)
+                                     input_folders, contacts, variables)
 
         self.size = ""
         if 'size' in self.parameters:

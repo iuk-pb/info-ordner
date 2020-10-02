@@ -20,13 +20,13 @@ TOC_ID_WIDTH = TOC_TOTAL_WIDTH - (TOC_X_ENTRY - TOC_X_CATEGORY) - TOC_TITLE_WIDT
 logger = logging.getLogger(__name__)
 
 
-def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
-    return GeneratorPdfToc(output_name, parameters, entries, sets, folder_work, folder_output, input_folders)
+def create_instance(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
+    return GeneratorPdfToc(output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables)
 
 
 class GeneratorPdfToc(Generator.Generator):
-    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders):
-        Generator.Generator.__init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders)
+    def __init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables):
+        Generator.Generator.__init__(self, output_name, parameters, entries, sets, folder_work, folder_output, input_folders, contacts, variables)
 
         self.latexFile = None
 
