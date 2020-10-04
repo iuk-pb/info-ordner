@@ -160,7 +160,7 @@ class GeneratorPdfToc(Generator.Generator):
             height) + 'mm, text width=' + str(width) + 'mm,align=' + align + ']\n')
         self.latexFile.write(
             'at ([xshift=' + str(x_position) + 'mm,yshift=-' + str(y_position) + 'mm]current page.north west) {\n')
-        self.latexFile.write(text + '\n')
+        self.latexFile.write(Utils.latex_escape(text) + '\n')
         self.latexFile.write('};\n')
 
     def latex_toc_create_text_bold(self, x_position, y_position, width, height, text, align):
@@ -169,7 +169,7 @@ class GeneratorPdfToc(Generator.Generator):
         self.latexFile.write(
             'at ([xshift=' + str(x_position) + 'mm,yshift=-' + str(y_position) + 'mm]current page.north west) {\n')
         self.latexFile.write('\\fontsize{14}{14} \\selectfont\n')
-        self.latexFile.write('\\textbf{' + text + '}\n')
+        self.latexFile.write('\\textbf{' + Utils.latex_escape(text) + '}\n')
         self.latexFile.write('};\n')
 
     def toc_generate_entry(self, y_position, title, subtitle, datum, version, doc_id, count_in_category, not_printed):

@@ -171,7 +171,7 @@ class GeneratorHistory(Generator.Generator):
         elif action == ACTION_CHANGE:
             if old_doc_title != new_doc_title:
                 item.reason.append(REASON_CHANGE_TITLE)
-                item.changes.append("Titel: " + old_doc_title + " -> " + new_doc_title)
+                item.changes.append("Titel: " + Utils.latex_escape(old_doc_title) + " -> " + Utils.latex_escape(new_doc_title))
                 if new_is_printed and old_was_printed:
                     item.checklist.extend(CHECKLIST_CHANGE_TITLE)
             if old_version != new_version or old_datum != new_datum:
@@ -248,13 +248,13 @@ class GeneratorHistory(Generator.Generator):
         for item in self.historyItems:
             text = "\\textbf{" + item.doc_id + " "
             if len(item.new_doc_title) > 0:
-                text += item.new_doc_title
+                text += Utils.latex_escape(item.new_doc_title)
             else:
-                text += item.old_doc_title
+                text += Utils.latex_escape(item.old_doc_title)
             text += "} \\newline "
 
             for reason in item.reason:
-                text += "- " + reason + " \\newline "
+                text += "- " + Utils.latex_escape(reason) + " \\newline "
 
             for change in item.changes:
                 text += change.replace("->", "$\\rightarrow$") + " \\newline "

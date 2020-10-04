@@ -43,7 +43,8 @@ class InfoFile:
         self.docId = self.baseFile.split('_')[0]
 
         # Title of the document
-        self.docTitle = self.baseFile.split('_')[1]
+        self.docTitle = '_'.join(self.baseFile.split('_')[1:])
+        print("DocTitle " + self.docTitle)
 
         # Subfolder
         self.folder = ''.join(file.split('/')[-2:-1])
